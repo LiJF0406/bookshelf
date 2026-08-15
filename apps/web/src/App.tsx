@@ -151,7 +151,7 @@ export default function App() {
   }
 
   return (
-    <div>
+    <div className="app-root">
       <header className="app-header">
         <h1>我的书架</h1>
         <div className="actions">
