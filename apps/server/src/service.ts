@@ -2,7 +2,7 @@ import { createWriteStream, mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { Readable } from "node:stream";
 import { pipeline } from "node:stream/promises";
-import { and, eq, like } from "drizzle-orm";
+import { and, eq, like, notInArray, sql } from "drizzle-orm";
 import { schema, type DB } from "@bookshelf/db";
 import * as douban from "@bookshelf/douban";
 import type {
@@ -99,6 +99,16 @@ export function createService({ db, coverDir }: ServiceDeps) {
       .insert(bookTags)
       .values(tagIds.map((tagId) => ({ bookId, tagId })))
       .onConflictDoNothing();
+  }
+
+  async function cleanupOrphanTags(): Promise<void> {
+    const rows = await db.select({ tagId: bookTags.tagId }).from(bookTags);
+    const used = new Set(rows.map((r) => r.tagId));
+    if (used.size === 0) {
+      await db.delete(tags).where(sql`1 = 1`);
+    } else {
+      await db.delete(tags).where(notInArray(tags.id, [...used]));
+    }
   }
 
   return {
@@ -201,7 +211,11 @@ export function createService({ db, coverDir }: ServiceDeps) {
 
     async deleteBook(id: number): Promise<boolean> {
       const res = await db.delete(books).where(eq(books.id, id));
-      return res.changes > 0;
+      if (res.changes > 0) {
+        await cleanupOrphanTags();
+        return true;
+      }
+      return false;
     },
 
     async listTags(): Promise<Tag[]> {
@@ -224,6 +238,7 @@ export function createService({ db, coverDir }: ServiceDeps) {
       await db.delete(bookTags).where(eq(bookTags.bookId, id));
       const ids = await ensureTags(names);
       await attachTags(id, ids);
+      await cleanupOrphanTags();
       return this.getBook(id);
     },
 

@@ -33,15 +33,28 @@ export default function App() {
       )
     : books;
 
+  function refreshTags() {
+    api
+      .listTags()
+      .then((next) => {
+        setTags(next);
+        if (tagFilter && !next.some((t) => t.name === tagFilter)) {
+          setTagFilter("");
+        }
+      })
+      .catch(() => {});
+  }
+
   function handleUpdated(updated: BookWithTags) {
     setBooks((prev) => prev.map((b) => (b.id === updated.id ? updated : b)));
     setSelected(updated);
+    refreshTags();
   }
 
   function handleDeleted(id: number) {
     setBooks((prev) => prev.filter((b) => b.id !== id));
     setSelected(null);
-    api.listTags().then(setTags).catch(() => {});
+    refreshTags();
   }
 
   return (
