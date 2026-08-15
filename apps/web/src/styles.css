@@ -220,17 +220,37 @@ body {
   overflow: auto;
   padding: 24px;
   position: relative;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.modal::-webkit-scrollbar {
+  display: none;
 }
 
 .modal-close {
   position: absolute;
   top: 12px;
-  right: 16px;
+  right: 12px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border: none;
-  background: transparent;
-  font-size: 22px;
+  background: #f0ede6;
+  border-radius: 50%;
+  font-size: 18px;
+  line-height: 1;
   cursor: pointer;
   color: var(--muted);
+  transition: background 0.15s ease, color 0.15s ease, transform 0.15s ease;
+}
+
+.modal-close:hover {
+  background: #e0d9cd;
+  color: var(--text);
+  transform: rotate(90deg);
 }
 
 .detail-body {
