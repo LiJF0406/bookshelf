@@ -130,6 +130,16 @@ body {
   border: 1px solid var(--danger);
 }
 
+.btn.danger-solid {
+  background: var(--danger);
+  color: #fff;
+  border: 1px solid var(--danger);
+}
+
+.btn.danger-solid:hover {
+  background: #a93226;
+}
+
 .btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
@@ -421,7 +431,15 @@ body {
   padding-top: 14px;
   border-top: 1px solid var(--border);
   display: flex;
+  align-items: center;
   justify-content: flex-end;
+  gap: 10px;
+}
+
+.confirm-text {
+  font-size: 14px;
+  color: var(--text);
+  margin-right: auto;
 }
 
 .field-row {

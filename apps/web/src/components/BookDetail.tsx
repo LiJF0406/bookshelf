@@ -23,6 +23,7 @@ const STATUS_COLORS: Record<BookStatus, string> = {
 
 export function BookDetail({ book, onClose, onUpdated, onDeleted }: Props) {
   const [newTag, setNewTag] = useState("");
+  const [confirming, setConfirming] = useState(false);
 
   async function changeStatus(status: string) {
     const updated = await api.updateStatus(book.id, status as BookStatus);
@@ -44,8 +45,7 @@ export function BookDetail({ book, onClose, onUpdated, onDeleted }: Props) {
     setNewTag("");
   }
 
-  async function remove() {
-    if (!confirm(`确定删除《${book.title}》吗？`)) return;
+  async function doDelete() {
     await api.deleteBook(book.id);
     onDeleted(book.id);
   }
@@ -170,9 +170,21 @@ export function BookDetail({ book, onClose, onUpdated, onDeleted }: Props) {
         </div>
 
         <div className="detail-footer">
-          <button className="btn danger" onClick={remove}>
-            删除书籍
-          </button>
+          {confirming ? (
+            <>
+              <span className="confirm-text">确定删除《{book.title}》吗？此操作不可撤销。</span>
+              <button className="btn secondary" onClick={() => setConfirming(false)}>
+                取消
+              </button>
+              <button className="btn danger-solid" onClick={doDelete}>
+                确认删除
+              </button>
+            </>
+          ) : (
+            <button className="btn danger" onClick={() => setConfirming(true)}>
+              删除书籍
+            </button>
+          )}
         </div>
       </div>
     </div>
