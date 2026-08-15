@@ -2,7 +2,7 @@ import { existsSync } from "node:fs";
 import { randomUUID } from "node:crypto";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import Fastify from "fastify";
+import Fastify, { type FastifyServerOptions } from "fastify";
 import cors from "@fastify/cors";
 import fastifyStatic from "@fastify/static";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
@@ -14,7 +14,7 @@ import { createMcpServer } from "./mcp.js";
 export interface BuildAppOptions {
   dbPath?: string;
   coverDir?: string;
-  logger?: boolean;
+  logger?: FastifyServerOptions["logger"];
 }
 
 export async function buildApp(options: BuildAppOptions = {}) {
