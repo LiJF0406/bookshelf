@@ -5,6 +5,7 @@ import { Shelf } from "./components/Shelf";
 import { AddBook } from "./components/AddBook";
 import { BookDetail } from "./components/BookDetail";
 import { ContextMenu, type ContextMenuState } from "./components/ContextMenu";
+import { ConfirmDialog } from "./components/ConfirmDialog";
 
 export default function App() {
   const [view, setView] = useState<"shelf" | "add">("shelf");
@@ -15,6 +16,7 @@ export default function App() {
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<BookWithTags | null>(null);
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<BookWithTags | null>(null);
   const [batchMode, setBatchMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [reload, setReload] = useState(0);
@@ -88,7 +90,7 @@ export default function App() {
       y: e.clientY,
       items: [
         { label: book.pinnedAt ? "取消置顶" : "置顶书籍", onClick: () => handlePin(book) },
-        { label: "删除书籍", danger: true, onClick: () => handleDeleteBook(book) },
+        { label: "删除书籍", danger: true, onClick: () => setConfirmDelete(book) },
       ],
     });
   }
@@ -203,6 +205,17 @@ export default function App() {
       )}
 
       <ContextMenu menu={contextMenu} onClose={() => setContextMenu(null)} />
+
+      {confirmDelete && (
+        <ConfirmDialog
+          message={`确定删除《${confirmDelete.title}》吗？此操作不可撤销。`}
+          onConfirm={() => {
+            handleDeleteBook(confirmDelete);
+            setConfirmDelete(null);
+          }}
+          onCancel={() => setConfirmDelete(null)}
+        />
+      )}
     </div>
   );
 }

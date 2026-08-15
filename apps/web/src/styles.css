@@ -763,3 +763,24 @@ select:focus {
   outline: 3px solid var(--accent);
   outline-offset: -3px;
 }
+
+.confirm-dialog {
+  background: var(--card);
+  border-radius: 12px;
+  padding: 24px;
+  max-width: 360px;
+  width: 100%;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.confirm-message {
+  font-size: 14px;
+  line-height: 1.6;
+  margin-bottom: 20px;
+}
+
+.confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
