@@ -24,6 +24,7 @@ export function BookCard({
 }: Props) {
   const timerRef = useRef<number | null>(null);
   const longPressFiredRef = useRef(false);
+  const isTouchRef = useRef(false);
 
   function clearTimer() {
     if (timerRef.current != null) {
@@ -33,6 +34,7 @@ export function BookCard({
   }
 
   function handlePointerDown(e: PointerEvent) {
+    isTouchRef.current = e.pointerType === "touch";
     if (e.pointerType !== "touch") return;
     longPressFiredRef.current = false;
     timerRef.current = window.setTimeout(() => {
@@ -40,6 +42,15 @@ export function BookCard({
       longPressFiredRef.current = true;
       onLongPress();
     }, LONG_PRESS_MS);
+  }
+
+  function handleContextMenu(e: MouseEvent) {
+    if (isTouchRef.current) {
+      e.preventDefault();
+      e.stopPropagation();
+      return;
+    }
+    onContextMenu(e);
   }
 
   function handlePointerMove() {
@@ -63,7 +74,7 @@ export function BookCard({
     <div
       className={`book-card ${selected ? "selected" : ""}`}
       onClick={handleClick}
-      onContextMenu={onContextMenu}
+      onContextMenu={handleContextMenu}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerEnd}
