@@ -151,7 +151,12 @@ export function AddBook({ onDone }: Props) {
             <div className="candidates">
               {candidates.map((c, i) => (
                 <div className="candidate" key={c.doubanId ?? i}>
-                  {c.coverUrl && <img src={c.coverUrl} alt={c.title} />}
+                  {c.coverUrl && (
+                    <img
+                      src={`/api/douban/cover?url=${encodeURIComponent(c.coverUrl)}`}
+                      alt={c.title}
+                    />
+                  )}
                   <div className="info">
                     <div className="title">{c.title}</div>
                     <div className="sub">

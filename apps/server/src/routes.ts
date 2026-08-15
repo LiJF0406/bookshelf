@@ -105,6 +105,31 @@ export function registerRoutes(app: FastifyInstance, service: Service): void {
     return service.searchDouban({ isbn, q, url });
   });
 
+  // 代理豆瓣封面，规避防盗链（浏览器直接引用豆瓣图床会被拒）
+  app.get("/api/douban/cover", async (req, reply) => {
+    const { url } = req.query as Record<string, string | undefined>;
+    if (!url) return reply.code(400).send({ error: "缺少 url 参数" });
+    const parsed = new URL(url);
+    if (!parsed.hostname.endsWith("doubanio.com")) {
+      return reply.code(400).send({ error: "仅支持豆瓣图片地址" });
+    }
+    try {
+      const res = await fetch(parsed.toString(), {
+        headers: {
+          Referer: "https://book.douban.com/",
+          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+        },
+      });
+      if (!res.ok) return reply.code(res.status).send();
+      const buf = Buffer.from(await res.arrayBuffer());
+      reply.header("Content-Type", res.headers.get("content-type") ?? "image/jpeg");
+      reply.header("Cache-Control", "public, max-age=86400");
+      return reply.send(buf);
+    } catch {
+      return reply.code(502).send();
+    }
+  });
+
   app.post("/api/douban/import", async (req, reply) => {
     const body = z.object({
       candidate: z.object({}).passthrough(),
