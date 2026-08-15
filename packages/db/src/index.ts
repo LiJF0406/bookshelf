@@ -34,6 +34,7 @@ export function migrate(sqlite: Sqlite): void {
       douban_id TEXT,
       douban_url TEXT,
       status TEXT NOT NULL DEFAULT 'unread',
+      pinned_at TEXT,
       created_at TEXT NOT NULL DEFAULT (datetime('now')),
       updated_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
@@ -52,4 +53,9 @@ export function migrate(sqlite: Sqlite): void {
 
     CREATE INDEX IF NOT EXISTS idx_books_status ON books(status);
   `);
+
+  const cols = sqlite.prepare(`PRAGMA table_info(books)`).all() as Array<{ name: string }>;
+  if (!cols.some((c) => c.name === "pinned_at")) {
+    sqlite.exec(`ALTER TABLE books ADD COLUMN pinned_at TEXT`);
+  }
 }

@@ -71,6 +71,33 @@ export function registerRoutes(app: FastifyInstance, service: Service): void {
     return book;
   });
 
+  app.patch("/api/books/:id/pin", async (req, reply) => {
+    const { id } = idSchema.parse(req.params);
+    const { pinned } = z.object({ pinned: z.boolean() }).parse(req.body);
+    const book = await service.updatePin(id, pinned);
+    if (!book) return reply.code(404).send({ error: "书籍不存在" });
+    return book;
+  });
+
+  app.post("/api/books/batch-delete", async (req) => {
+    const { ids } = z.object({ ids: z.array(z.number().int()) }).parse(req.body);
+    return { count: await service.batchDelete(ids) };
+  });
+
+  app.post("/api/books/batch-status", async (req) => {
+    const { ids, status } = z
+      .object({ ids: z.array(z.number().int()), status: statusSchema })
+      .parse(req.body);
+    return { count: await service.batchStatus(ids, status) };
+  });
+
+  app.post("/api/books/batch-tags", async (req) => {
+    const { ids, tags } = z
+      .object({ ids: z.array(z.number().int()), tags: z.array(z.string()) })
+      .parse(req.body);
+    return { count: await service.batchTags(ids, tags) };
+  });
+
   app.delete("/api/books/:id", async (req, reply) => {
     const { id } = idSchema.parse(req.params);
     const ok = await service.deleteBook(id);

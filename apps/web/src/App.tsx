@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type MouseEvent } from "react";
 import type { BookStatus, BookWithTags, Tag } from "@bookshelf/shared";
 import { api } from "./api";
 import { Shelf } from "./components/Shelf";
 import { AddBook } from "./components/AddBook";
 import { BookDetail } from "./components/BookDetail";
+import { ContextMenu, type ContextMenuState } from "./components/ContextMenu";
 
 export default function App() {
   const [view, setView] = useState<"shelf" | "add">("shelf");
@@ -13,6 +14,10 @@ export default function App() {
   const [tagFilter, setTagFilter] = useState("");
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<BookWithTags | null>(null);
+  const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
+  const [batchMode, setBatchMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [reload, setReload] = useState(0);
 
   useEffect(() => {
     api.listTags().then(setTags).catch(() => {});
@@ -23,7 +28,7 @@ export default function App() {
       .listBooks({ status: statusFilter || undefined, tag: tagFilter || undefined })
       .then(setBooks)
       .catch(() => {});
-  }, [statusFilter, tagFilter, view]);
+  }, [statusFilter, tagFilter, view, reload]);
 
   const filtered = query
     ? books.filter(
@@ -57,6 +62,94 @@ export default function App() {
     refreshTags();
   }
 
+  async function handlePin(book: BookWithTags) {
+    try {
+      const updated = await api.updatePin(book.id, !book.pinnedAt);
+      handleUpdated(updated);
+    } catch (e) {
+      alert((e as Error).message);
+    }
+  }
+
+  async function handleDeleteBook(book: BookWithTags) {
+    try {
+      await api.deleteBook(book.id);
+      handleDeleted(book.id);
+    } catch (e) {
+      alert((e as Error).message);
+    }
+  }
+
+  function handleBookContextMenu(e: MouseEvent, book: BookWithTags) {
+    e.preventDefault();
+    e.stopPropagation();
+    setContextMenu({
+      x: e.clientX,
+      y: e.clientY,
+      items: [
+        { label: book.pinnedAt ? "取消置顶" : "置顶书籍", onClick: () => handlePin(book) },
+        { label: "删除书籍", danger: true, onClick: () => handleDeleteBook(book) },
+      ],
+    });
+  }
+
+  function handleEmptyContextMenu(e: MouseEvent) {
+    e.preventDefault();
+    setContextMenu({
+      x: e.clientX,
+      y: e.clientY,
+      items: [{ label: "批量处理", onClick: () => setBatchMode(true) }],
+    });
+  }
+
+  function toggleSelect(id: number) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function toggleSelectAll() {
+    setSelectedIds((prev) =>
+      prev.size === books.length && books.length > 0 ? new Set() : new Set(books.map((b) => b.id)),
+    );
+  }
+
+  function exitBatch() {
+    setBatchMode(false);
+    setSelectedIds(new Set());
+    setReload((r) => r + 1);
+  }
+
+  async function handleBatchStatus(status: BookStatus) {
+    try {
+      await api.batchStatus([...selectedIds], status);
+      exitBatch();
+    } catch (e) {
+      alert((e as Error).message);
+    }
+  }
+
+  async function handleBatchTags(names: string[]) {
+    try {
+      await api.batchTags([...selectedIds], names);
+      exitBatch();
+    } catch (e) {
+      alert((e as Error).message);
+    }
+  }
+
+  async function handleBatchDelete() {
+    try {
+      await api.batchDelete([...selectedIds]);
+      exitBatch();
+    } catch (e) {
+      alert((e as Error).message);
+    }
+  }
+
   return (
     <div>
       <header className="app-header">
@@ -83,10 +176,20 @@ export default function App() {
           statusFilter={statusFilter}
           tagFilter={tagFilter}
           query={query}
+          batchMode={batchMode}
+          selectedIds={selectedIds}
           onStatusFilter={setStatusFilter}
           onTagFilter={setTagFilter}
           onQuery={setQuery}
           onSelect={setSelected}
+          onBookContextMenu={handleBookContextMenu}
+          onEmptyContextMenu={handleEmptyContextMenu}
+          onToggleSelect={toggleSelect}
+          onSelectAll={toggleSelectAll}
+          onExitBatch={exitBatch}
+          onBatchStatus={handleBatchStatus}
+          onBatchTags={handleBatchTags}
+          onBatchDelete={handleBatchDelete}
         />
       )}
 
@@ -98,6 +201,8 @@ export default function App() {
           onDeleted={handleDeleted}
         />
       )}
+
+      <ContextMenu menu={contextMenu} onClose={() => setContextMenu(null)} />
     </div>
   );
 }

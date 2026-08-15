@@ -17,6 +17,7 @@ export const books = sqliteTable("books", {
   doubanId: text("douban_id"),
   doubanUrl: text("douban_url"),
   status: text("status").notNull().default("unread"),
+  pinnedAt: text("pinned_at"),
   createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
   updatedAt: text("updated_at").notNull().default(sql`(datetime('now'))`),
 });

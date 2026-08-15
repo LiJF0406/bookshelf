@@ -25,6 +25,7 @@ export interface Book {
   doubanId: string | null;
   doubanUrl: string | null;
   status: BookStatus;
+  pinnedAt: string | null;
   createdAt: string;
   updatedAt: string;
 }

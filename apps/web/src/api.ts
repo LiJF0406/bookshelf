@@ -35,6 +35,26 @@ export const api = {
       method: "PATCH",
       body: JSON.stringify({ status }),
     }),
+  updatePin: (id: number, pinned: boolean) =>
+    request<BookWithTags>(`/api/books/${id}/pin`, {
+      method: "PATCH",
+      body: JSON.stringify({ pinned }),
+    }),
+  batchDelete: (ids: number[]) =>
+    request<{ count: number }>("/api/books/batch-delete", {
+      method: "POST",
+      body: JSON.stringify({ ids }),
+    }),
+  batchStatus: (ids: number[], status: BookStatus) =>
+    request<{ count: number }>("/api/books/batch-status", {
+      method: "POST",
+      body: JSON.stringify({ ids, status }),
+    }),
+  batchTags: (ids: number[], tags: string[]) =>
+    request<{ count: number }>("/api/books/batch-tags", {
+      method: "POST",
+      body: JSON.stringify({ ids, tags }),
+    }),
   deleteBook: (id: number) => request<{ ok: boolean }>(`/api/books/${id}`, { method: "DELETE" }),
   setTags: (id: number, tags: string[]) =>
     request<BookWithTags>(`/api/books/${id}/tags`, {

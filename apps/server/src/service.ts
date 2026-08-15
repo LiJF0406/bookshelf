@@ -2,7 +2,7 @@ import { createWriteStream, mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { Readable } from "node:stream";
 import { pipeline } from "node:stream/promises";
-import { and, eq, like, notInArray, sql } from "drizzle-orm";
+import { and, eq, inArray, like, notInArray, sql } from "drizzle-orm";
 import { schema, type DB } from "@bookshelf/db";
 import * as douban from "@bookshelf/douban";
 import type {
@@ -37,6 +37,7 @@ interface BookQueryRow {
   doubanId: string | null;
   doubanUrl: string | null;
   status: string;
+  pinnedAt: string | null;
   createdAt: string;
   updatedAt: string;
   bookTags: Array<{ tag: typeof tags.$inferSelect }>;
@@ -130,7 +131,7 @@ export function createService({ db, coverDir }: ServiceDeps) {
       let result = await db.query.books.findMany({
         where: conditions.length ? and(...conditions) : undefined,
         with: { bookTags: { with: { tag: true } } },
-        orderBy: (t, { desc }) => [desc(t.updatedAt)],
+        orderBy: (t, { desc }) => [desc(t.pinnedAt), desc(t.updatedAt)],
       });
       if (ids) result = result.filter((r) => ids!.includes(r.id));
       return result.map(toBookWithTags);
@@ -209,6 +210,17 @@ export function createService({ db, coverDir }: ServiceDeps) {
       return this.getBook(id);
     },
 
+    async updatePin(id: number, pinned: boolean): Promise<BookWithTags | null> {
+      await db
+        .update(books)
+        .set({
+          pinnedAt: pinned ? new Date().toISOString() : null,
+          updatedAt: new Date().toISOString(),
+        })
+        .where(eq(books.id, id));
+      return this.getBook(id);
+    },
+
     async deleteBook(id: number): Promise<boolean> {
       const res = await db.delete(books).where(eq(books.id, id));
       if (res.changes > 0) {
@@ -240,6 +252,33 @@ export function createService({ db, coverDir }: ServiceDeps) {
       await attachTags(id, ids);
       await cleanupOrphanTags();
       return this.getBook(id);
+    },
+
+    async batchDelete(ids: number[]): Promise<number> {
+      if (ids.length === 0) return 0;
+      const res = await db.delete(books).where(inArray(books.id, ids));
+      await cleanupOrphanTags();
+      return res.changes;
+    },
+
+    async batchStatus(ids: number[], status: BookStatus): Promise<number> {
+      if (ids.length === 0) return 0;
+      const res = await db
+        .update(books)
+        .set({ status, updatedAt: new Date().toISOString() })
+        .where(inArray(books.id, ids));
+      return res.changes;
+    },
+
+    async batchTags(ids: number[], names: string[]): Promise<number> {
+      if (ids.length === 0) return 0;
+      const tagIds = await ensureTags(names);
+      if (tagIds.length === 0) return 0;
+      await db
+        .insert(bookTags)
+        .values(ids.flatMap((bookId) => tagIds.map((tagId) => ({ bookId, tagId }))))
+        .onConflictDoNothing();
+      return ids.length;
     },
 
     async searchDouban(input: { isbn?: string; q?: string; url?: string }): Promise<{
