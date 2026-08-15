@@ -27,7 +27,15 @@ export async function buildApp(options: BuildAppOptions = {}) {
   const service = createService({ db, coverDir });
 
   const app = Fastify({ logger: options.logger ?? false });
-  await app.register(cors, { origin: true });
+  await app.register(cors, {
+    origin: (origin, cb) => {
+      if (!origin || origin.startsWith("http://localhost") || origin.startsWith("http://127.0.0.1")) {
+        cb(null, true);
+      } else {
+        cb(null, false);
+      }
+    },
+  });
   await app.register(fastifyStatic, { root: coverDir, prefix: "/covers/" });
 
   const webDist = resolve(fileURLToPath(new URL("../../web/dist", import.meta.url)));

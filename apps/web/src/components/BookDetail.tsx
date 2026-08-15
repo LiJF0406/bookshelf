@@ -1,7 +1,7 @@
 import { useState } from "react";
 import {
-  BOOK_STATUSES,
   BOOK_STATUS_LABELS,
+  STATUS_OPTIONS,
   type BookStatus,
   type BookWithTags,
 } from "@bookshelf/shared";
@@ -27,28 +27,44 @@ export function BookDetail({ book, onClose, onUpdated, onDeleted }: Props) {
   const [confirming, setConfirming] = useState(false);
 
   async function changeStatus(status: string) {
-    const updated = await api.updateStatus(book.id, status as BookStatus);
-    onUpdated(updated);
+    try {
+      const updated = await api.updateStatus(book.id, status as BookStatus);
+      onUpdated(updated);
+    } catch (e) {
+      alert((e as Error).message);
+    }
   }
 
   async function removeTag(name: string) {
-    const next = book.tags.filter((t) => t.name !== name).map((t) => t.name);
-    const updated = await api.setTags(book.id, next);
-    onUpdated(updated);
+    try {
+      const next = book.tags.filter((t) => t.name !== name).map((t) => t.name);
+      const updated = await api.setTags(book.id, next);
+      onUpdated(updated);
+    } catch (e) {
+      alert((e as Error).message);
+    }
   }
 
   async function addTag() {
     const name = newTag.trim();
     if (!name) return;
-    const next = [...book.tags.map((t) => t.name), name];
-    const updated = await api.setTags(book.id, next);
-    onUpdated(updated);
-    setNewTag("");
+    try {
+      const next = [...book.tags.map((t) => t.name), name];
+      const updated = await api.setTags(book.id, next);
+      onUpdated(updated);
+      setNewTag("");
+    } catch (e) {
+      alert((e as Error).message);
+    }
   }
 
   async function doDelete() {
-    await api.deleteBook(book.id);
-    onDeleted(book.id);
+    try {
+      await api.deleteBook(book.id);
+      onDeleted(book.id);
+    } catch (e) {
+      alert((e as Error).message);
+    }
   }
 
   return (
@@ -142,7 +158,7 @@ export function BookDetail({ book, onClose, onUpdated, onDeleted }: Props) {
             <span className="action-label">阅读状态</span>
             <Dropdown
               value={book.status}
-              options={BOOK_STATUSES.map((s) => ({ value: s, label: BOOK_STATUS_LABELS[s] }))}
+              options={STATUS_OPTIONS}
               onChange={(v) => changeStatus(v)}
             />
           </div>

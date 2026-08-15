@@ -1,7 +1,7 @@
 import { useState } from "react";
 import {
-  BOOK_STATUSES,
-  BOOK_STATUS_LABELS,
+  STATUS_OPTIONS,
+  splitTagText,
   type BookStatus,
   type DoubanCandidate,
 } from "@bookshelf/shared";
@@ -62,7 +62,7 @@ export function AddBook({ onDone }: Props) {
         price: form.price.trim() || null,
         rating: form.rating ? Number(form.rating) : null,
         status,
-        tags: splitTags(tagsText),
+        tags: splitTagText(tagsText),
       });
       onDone();
     } catch (e) {
@@ -92,7 +92,7 @@ export function AddBook({ onDone }: Props) {
   async function doImport(candidate: DoubanCandidate) {
     setError("");
     try {
-      await api.importDouban(candidate, importStatus, splitTags(importTags));
+      await api.importDouban(candidate, importStatus, splitTagText(importTags));
       onDone();
     } catch (e) {
       setError((e as Error).message);
@@ -159,7 +159,7 @@ export function AddBook({ onDone }: Props) {
               <label>导入为</label>
               <Dropdown
                 value={importStatus}
-                options={BOOK_STATUSES.map((s) => ({ value: s, label: BOOK_STATUS_LABELS[s] }))}
+                options={STATUS_OPTIONS}
                 onChange={(v) => setImportStatus(v as BookStatus)}
               />
               <input
@@ -251,7 +251,7 @@ export function AddBook({ onDone }: Props) {
                 <label>状态</label>
                 <Dropdown
                   value={status}
-                  options={BOOK_STATUSES.map((s) => ({ value: s, label: BOOK_STATUS_LABELS[s] }))}
+                  options={STATUS_OPTIONS}
                   onChange={(v) => setStatus(v as BookStatus)}
                   block
                 />
@@ -274,9 +274,3 @@ export function AddBook({ onDone }: Props) {
   );
 }
 
-function splitTags(text: string): string[] {
-  return text
-    .split(/[,，、]/)
-    .map((s) => s.trim())
-    .filter(Boolean);
-}

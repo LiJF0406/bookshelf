@@ -52,11 +52,21 @@ function toBookWithTags(row: BookQueryRow): BookWithTags {
   };
 }
 
+function isDoubanCoverUrl(url: string): boolean {
+  try {
+    const host = new URL(url).hostname;
+    return host === "doubanio.com" || host.endsWith(".doubanio.com");
+  } catch {
+    return false;
+  }
+}
+
 async function downloadCover(
   coverUrl: string,
   coverDir: string,
   base: string,
 ): Promise<string | null> {
+  if (!isDoubanCoverUrl(coverUrl)) return null;
   try {
     const res = await fetch(coverUrl, {
       headers: { Referer: "https://book.douban.com/", "User-Agent": "bookshelf" },

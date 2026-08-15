@@ -9,6 +9,17 @@ export const BOOK_STATUS_LABELS: Record<BookStatus, string> = {
   read: "已读",
 };
 
+export const STATUS_OPTIONS: Array<{ value: BookStatus; label: string }> = BOOK_STATUSES.map(
+  (s) => ({ value: s, label: BOOK_STATUS_LABELS[s] }),
+);
+
+export function splitTagText(text: string): string[] {
+  return text
+    .split(/[,，、]/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+
 export interface Book {
   id: number;
   title: string;

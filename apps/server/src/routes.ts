@@ -136,8 +136,13 @@ export function registerRoutes(app: FastifyInstance, service: Service): void {
   app.get("/api/douban/cover", async (req, reply) => {
     const { url } = req.query as Record<string, string | undefined>;
     if (!url) return reply.code(400).send({ error: "缺少 url 参数" });
-    const parsed = new URL(url);
-    if (!parsed.hostname.endsWith("doubanio.com")) {
+    let parsed: URL;
+    try {
+      parsed = new URL(url);
+    } catch {
+      return reply.code(400).send({ error: "无效的 url" });
+    }
+    if (parsed.hostname !== "doubanio.com" && !parsed.hostname.endsWith(".doubanio.com")) {
       return reply.code(400).send({ error: "仅支持豆瓣图片地址" });
     }
     try {

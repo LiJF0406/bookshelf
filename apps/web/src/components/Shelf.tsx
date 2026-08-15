@@ -1,7 +1,7 @@
 import { useState, type MouseEvent } from "react";
 import {
-  BOOK_STATUSES,
-  BOOK_STATUS_LABELS,
+  STATUS_OPTIONS,
+  splitTagText,
   type BookStatus,
   type BookWithTags,
   type Tag,
@@ -62,15 +62,15 @@ export function Shelf(props: Props) {
               <>
                 <div className="context-overlay" onClick={() => setStatusMenuOpen(false)} />
                 <div className="dropdown-menu">
-                  {BOOK_STATUSES.map((s) => (
+                  {STATUS_OPTIONS.map((o) => (
                     <button
-                      key={s}
+                      key={o.value}
                       onClick={() => {
-                        props.onBatchStatus(s);
+                        props.onBatchStatus(o.value);
                         setStatusMenuOpen(false);
                       }}
                     >
-                      {BOOK_STATUS_LABELS[s]}
+                      {o.label}
                     </button>
                   ))}
                 </div>
@@ -84,10 +84,7 @@ export function Shelf(props: Props) {
             onChange={(e) => setBatchTagsInput(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === "Enter") {
-                const names = batchTagsInput
-                  .split(/[,，、]/)
-                  .map((s) => s.trim())
-                  .filter(Boolean);
+                const names = splitTagText(batchTagsInput);
                 if (names.length) props.onBatchTags(names);
                 setBatchTagsInput("");
               }
@@ -110,13 +107,13 @@ export function Shelf(props: Props) {
               >
                 全部
               </button>
-              {BOOK_STATUSES.map((s) => (
+              {STATUS_OPTIONS.map((o) => (
                 <button
-                  key={s}
-                  className={`tab ${statusFilter === s ? "active" : ""}`}
-                  onClick={() => props.onStatusFilter(s)}
+                  key={o.value}
+                  className={`tab ${statusFilter === o.value ? "active" : ""}`}
+                  onClick={() => props.onStatusFilter(o.value)}
                 >
-                  {BOOK_STATUS_LABELS[s]}
+                  {o.label}
                 </button>
               ))}
             </div>

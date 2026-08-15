@@ -53,7 +53,14 @@ export default function App() {
   }
 
   function handleUpdated(updated: BookWithTags) {
-    setBooks((prev) => prev.map((b) => (b.id === updated.id ? updated : b)));
+    setBooks((prev) => {
+      const next = prev.map((b) => (b.id === updated.id ? updated : b));
+      // 服务端是按状态/标签过滤返回的，本地替换后需把不再匹配过滤条件的书移除
+      const mismatch =
+        (statusFilter && updated.status !== statusFilter) ||
+        (tagFilter && !updated.tags.some((t) => t.name === tagFilter));
+      return mismatch ? next.filter((b) => b.id !== updated.id) : next;
+    });
     setSelected(updated);
     refreshTags();
   }
@@ -115,7 +122,9 @@ export default function App() {
 
   function toggleSelectAll() {
     setSelectedIds((prev) =>
-      prev.size === books.length && books.length > 0 ? new Set() : new Set(books.map((b) => b.id)),
+      prev.size === filtered.length && filtered.length > 0
+        ? new Set()
+        : new Set(filtered.map((b) => b.id)),
     );
   }
 

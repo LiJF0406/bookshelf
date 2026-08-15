@@ -1,8 +1,9 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
+import { BOOK_STATUSES } from "@bookshelf/shared";
 import type { Service } from "./routes.js";
 
-const statusEnum = z.enum(["want_read", "unread", "reading", "read"]);
+const statusEnum = z.enum([...BOOK_STATUSES]);
 
 function text(data: unknown): { content: Array<{ type: "text"; text: string }> } {
   const body = typeof data === "string" ? data : JSON.stringify(data, null, 2);
