@@ -6,6 +6,7 @@ import {
   type DoubanCandidate,
 } from "@bookshelf/shared";
 import { api } from "../api";
+import { Dropdown } from "./Dropdown";
 
 interface Props {
   onDone: () => void;
@@ -126,15 +127,16 @@ export function AddBook({ onDone }: Props) {
           <div className="form-section">
             <h3>从豆瓣导入（推荐）</h3>
             <div className="field-row">
-              <select
+              <Dropdown
                 value={searchMode}
-                onChange={(e) => setSearchMode(e.target.value as any)}
-                style={{ minWidth: 120 }}
-              >
-                <option value="q">书名/关键词</option>
-                <option value="isbn">ISBN</option>
-                <option value="url">豆瓣链接</option>
-              </select>
+                options={[
+                  { value: "q", label: "书名/关键词" },
+                  { value: "isbn", label: "ISBN" },
+                  { value: "url", label: "豆瓣链接" },
+                ]}
+                onChange={(v) => setSearchMode(v as "q" | "isbn" | "url")}
+                style={{ minWidth: 130 }}
+              />
               <input
                 className="search-input"
                 placeholder={
@@ -155,13 +157,11 @@ export function AddBook({ onDone }: Props) {
 
             <div className="field-row">
               <label>导入为</label>
-              <select value={importStatus} onChange={(e) => setImportStatus(e.target.value as any)}>
-                {BOOK_STATUSES.map((s) => (
-                  <option key={s} value={s}>
-                    {BOOK_STATUS_LABELS[s]}
-                  </option>
-                ))}
-              </select>
+              <Dropdown
+                value={importStatus}
+                options={BOOK_STATUSES.map((s) => ({ value: s, label: BOOK_STATUS_LABELS[s] }))}
+                onChange={(v) => setImportStatus(v as BookStatus)}
+              />
               <input
                 className="search-input"
                 placeholder="标签（逗号分隔），如 科幻,中国"
@@ -249,13 +249,12 @@ export function AddBook({ onDone }: Props) {
               </div>
               <div className="form-field">
                 <label>状态</label>
-                <select value={status} onChange={(e) => setStatus(e.target.value as any)}>
-                  {BOOK_STATUSES.map((s) => (
-                    <option key={s} value={s}>
-                      {BOOK_STATUS_LABELS[s]}
-                    </option>
-                  ))}
-                </select>
+                <Dropdown
+                  value={status}
+                  options={BOOK_STATUSES.map((s) => ({ value: s, label: BOOK_STATUS_LABELS[s] }))}
+                  onChange={(v) => setStatus(v as BookStatus)}
+                  block
+                />
               </div>
               <div className="form-field">
                 <label>标签（逗号分隔）</label>

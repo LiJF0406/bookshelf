@@ -53,14 +53,15 @@ export function Shelf(props: Props) {
           <button className="btn secondary" onClick={props.onSelectAll}>
             {selectedIds.size === books.length && books.length > 0 ? "取消全选" : "全选"}
           </button>
-          <div className="batch-status-wrap">
-            <button className="btn secondary" onClick={() => setStatusMenuOpen((v) => !v)}>
-              批量改状态 <span className="caret">▾</span>
+          <div className="dropdown-wrap">
+            <button className="btn secondary dropdown-btn" onClick={() => setStatusMenuOpen((v) => !v)}>
+              <span>批量改状态</span>
+              <span className="caret">▾</span>
             </button>
             {statusMenuOpen && (
               <>
                 <div className="context-overlay" onClick={() => setStatusMenuOpen(false)} />
-                <div className="batch-status-menu">
+                <div className="dropdown-menu">
                   {BOOK_STATUSES.map((s) => (
                     <button
                       key={s}

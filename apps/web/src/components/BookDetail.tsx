@@ -6,6 +6,7 @@ import {
   type BookWithTags,
 } from "@bookshelf/shared";
 import { api } from "../api";
+import { Dropdown } from "./Dropdown";
 
 interface Props {
   book: BookWithTags;
@@ -139,13 +140,11 @@ export function BookDetail({ book, onClose, onUpdated, onDeleted }: Props) {
         <div className="detail-actions">
           <div className="action-block">
             <span className="action-label">阅读状态</span>
-            <select value={book.status} onChange={(e) => changeStatus(e.target.value)}>
-              {BOOK_STATUSES.map((s) => (
-                <option key={s} value={s}>
-                  {BOOK_STATUS_LABELS[s]}
-                </option>
-              ))}
-            </select>
+            <Dropdown
+              value={book.status}
+              options={BOOK_STATUSES.map((s) => ({ value: s, label: BOOK_STATUS_LABELS[s] }))}
+              onChange={(v) => changeStatus(v)}
+            />
           </div>
           <div className="action-block">
             <span className="action-label">分类</span>

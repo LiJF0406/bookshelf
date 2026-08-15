@@ -679,16 +679,31 @@ select:focus {
   margin-right: auto;
 }
 
-.batch-status-wrap {
+.dropdown-wrap {
   position: relative;
+  display: inline-block;
+}
+
+.dropdown-wrap.block {
+  display: block;
+}
+
+.dropdown-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.dropdown-wrap.block .dropdown-btn {
+  width: 100%;
 }
 
 .caret {
-  margin-left: 4px;
   font-size: 11px;
 }
 
-.batch-status-menu {
+.dropdown-menu {
   position: absolute;
   top: calc(100% + 4px);
   left: 0;
@@ -703,7 +718,7 @@ select:focus {
   flex-direction: column;
 }
 
-.batch-status-menu button {
+.dropdown-menu button {
   border: none;
   background: transparent;
   text-align: left;
@@ -714,8 +729,13 @@ select:focus {
   color: var(--text);
 }
 
-.batch-status-menu button:hover {
+.dropdown-menu button:hover {
   background: #f0ede6;
+}
+
+.dropdown-menu button.active {
+  background: #f0ede6;
+  font-weight: 500;
 }
 
 .pin-badge {
