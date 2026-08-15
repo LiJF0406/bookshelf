@@ -34,6 +34,7 @@ export function Shelf(props: Props) {
   const { books, tags, statusFilter, tagFilter, query, batchMode, selectedIds } = props;
   const [batchTagsInput, setBatchTagsInput] = useState("");
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [statusMenuOpen, setStatusMenuOpen] = useState(false);
 
   function handleBatchDelete() {
     if (!confirmDelete) {
@@ -52,21 +53,29 @@ export function Shelf(props: Props) {
           <button className="btn secondary" onClick={props.onSelectAll}>
             {selectedIds.size === books.length && books.length > 0 ? "取消全选" : "全选"}
           </button>
-          <select
-            className="batch-status"
-            value=""
-            onChange={(e) => {
-              const v = e.target.value;
-              if (v) props.onBatchStatus(v as BookStatus);
-            }}
-          >
-            <option value="">批量改状态…</option>
-            {BOOK_STATUSES.map((s) => (
-              <option key={s} value={s}>
-                {BOOK_STATUS_LABELS[s]}
-              </option>
-            ))}
-          </select>
+          <div className="batch-status-wrap">
+            <button className="btn secondary" onClick={() => setStatusMenuOpen((v) => !v)}>
+              批量改状态 <span className="caret">▾</span>
+            </button>
+            {statusMenuOpen && (
+              <>
+                <div className="context-overlay" onClick={() => setStatusMenuOpen(false)} />
+                <div className="batch-status-menu">
+                  {BOOK_STATUSES.map((s) => (
+                    <button
+                      key={s}
+                      onClick={() => {
+                        props.onBatchStatus(s);
+                        setStatusMenuOpen(false);
+                      }}
+                    >
+                      {BOOK_STATUS_LABELS[s]}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
           <input
             className="search-input"
             placeholder="批量加标签，逗号分隔，回车确认"
