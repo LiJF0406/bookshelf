@@ -1,5 +1,10 @@
 import { useState } from "react";
-import { BOOK_STATUSES, BOOK_STATUS_LABELS, type BookWithTags } from "@bookshelf/shared";
+import {
+  BOOK_STATUSES,
+  BOOK_STATUS_LABELS,
+  type BookStatus,
+  type BookWithTags,
+} from "@bookshelf/shared";
 import { api } from "../api";
 
 interface Props {
@@ -9,11 +14,18 @@ interface Props {
   onDeleted: (id: number) => void;
 }
 
+const STATUS_COLORS: Record<BookStatus, string> = {
+  want_read: "#4a7fbd",
+  unread: "#9a958c",
+  reading: "#d18a3a",
+  read: "#5a9a6a",
+};
+
 export function BookDetail({ book, onClose, onUpdated, onDeleted }: Props) {
   const [newTag, setNewTag] = useState("");
 
   async function changeStatus(status: string) {
-    const updated = await api.updateStatus(book.id, status as any);
+    const updated = await api.updateStatus(book.id, status as BookStatus);
     onUpdated(updated);
   }
 
@@ -44,70 +56,120 @@ export function BookDetail({ book, onClose, onUpdated, onDeleted }: Props) {
         <button className="modal-close" onClick={onClose}>
           ×
         </button>
+
         <div className="detail-body">
           <div className="detail-cover">
-            {book.coverPath ? <img src={book.coverPath} alt={book.title} /> : null}
+            {book.coverPath ? (
+              <img src={book.coverPath} alt={book.title} />
+            ) : (
+              <div className="detail-cover-placeholder">{book.title}</div>
+            )}
           </div>
           <div className="detail-info">
-            <h2>{book.title}</h2>
+            <div className="detail-header">
+              <h2>{book.title}</h2>
+              <div className="badges">
+                <span className="badge" style={{ background: STATUS_COLORS[book.status] }}>
+                  {BOOK_STATUS_LABELS[book.status]}
+                </span>
+                {book.rating != null && <span className="badge rating">★ {book.rating}</span>}
+              </div>
+            </div>
             <ul className="meta-list">
               {book.author && (
                 <li>
-                  作者：<b>{book.author}</b>
-                  {book.authorNationality && <span>（{book.authorNationality}）</span>}
+                  <span className="meta-key">作者</span>
+                  <span className="meta-value">
+                    {book.author}
+                    {book.authorNationality && `（${book.authorNationality}）`}
+                  </span>
                 </li>
               )}
-              {book.publisher && <li>出版社：<b>{book.publisher}</b></li>}
-              {book.pubdate && <li>出版年：<b>{book.pubdate}</b></li>}
-              {book.isbn && <li>ISBN：<b>{book.isbn}</b></li>}
-              {book.pages && <li>页数：<b>{book.pages}</b></li>}
-              {book.price && <li>定价：<b>{book.price}</b></li>}
-              {book.rating != null && <li>豆瓣评分：<b>{book.rating}</b></li>}
+              {book.publisher && (
+                <li>
+                  <span className="meta-key">出版社</span>
+                  <span className="meta-value">{book.publisher}</span>
+                </li>
+              )}
+              {book.pubdate && (
+                <li>
+                  <span className="meta-key">出版年</span>
+                  <span className="meta-value">{book.pubdate}</span>
+                </li>
+              )}
+              {book.isbn && (
+                <li>
+                  <span className="meta-key">ISBN</span>
+                  <span className="meta-value">{book.isbn}</span>
+                </li>
+              )}
+              {book.pages && (
+                <li>
+                  <span className="meta-key">页数</span>
+                  <span className="meta-value">{book.pages}</span>
+                </li>
+              )}
+              {book.price && (
+                <li>
+                  <span className="meta-key">定价</span>
+                  <span className="meta-value">{book.price}</span>
+                </li>
+              )}
               {book.doubanUrl && (
                 <li>
-                  <a href={book.doubanUrl} target="_blank" rel="noreferrer">
-                    豆瓣链接
-                  </a>
+                  <span className="meta-key">豆瓣</span>
+                  <span className="meta-value">
+                    <a href={book.doubanUrl} target="_blank" rel="noreferrer">
+                      查看详情
+                    </a>
+                  </span>
                 </li>
               )}
             </ul>
-            {book.intro && <div className="intro">{book.intro}</div>}
           </div>
         </div>
 
-        <div className="field-row">
-          <label>状态</label>
-          <select value={book.status} onChange={(e) => changeStatus(e.target.value)}>
-            {BOOK_STATUSES.map((s) => (
-              <option key={s} value={s}>
-                {BOOK_STATUS_LABELS[s]}
-              </option>
-            ))}
-          </select>
-        </div>
+        {book.intro && (
+          <div className="intro-block">
+            <div className="intro-title">内容简介</div>
+            <div className="intro">{book.intro}</div>
+          </div>
+        )}
 
-        <div className="field-row">
-          <label>分类</label>
-          <div className="tag-list">
-            {book.tags.map((t) => (
-              <span className="tag" key={t.id}>
-                {t.name}
-                <button className="remove" onClick={() => removeTag(t.name)}>
-                  ×
-                </button>
-              </span>
-            ))}
-            <input
-              placeholder="添加标签"
-              value={newTag}
-              onChange={(e) => setNewTag(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && addTag()}
-              style={{ width: 90, padding: "3px 8px" }}
-            />
+        <div className="detail-actions">
+          <div className="action-block">
+            <span className="action-label">阅读状态</span>
+            <select value={book.status} onChange={(e) => changeStatus(e.target.value)}>
+              {BOOK_STATUSES.map((s) => (
+                <option key={s} value={s}>
+                  {BOOK_STATUS_LABELS[s]}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="action-block">
+            <span className="action-label">分类</span>
+            <div className="tag-list">
+              {book.tags.map((t) => (
+                <span className="tag" key={t.id}>
+                  {t.name}
+                  <button className="remove" onClick={() => removeTag(t.name)}>
+                    ×
+                  </button>
+                </span>
+              ))}
+              <input
+                className="tag-input"
+                placeholder="添加标签"
+                value={newTag}
+                onChange={(e) => setNewTag(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && addTag()}
+              />
+            </div>
           </div>
         </div>
 
-        <div className="field-row">
+        <div className="detail-footer">
           <button className="btn danger" onClick={remove}>
             删除书籍
           </button>
