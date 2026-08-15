@@ -246,7 +246,16 @@ export function createService({ db, coverDir }: ServiceDeps) {
       candidate: DoubanCandidate,
       opts: { status?: BookStatus; tags?: string[] } = {},
     ): Promise<BookWithTags> {
-      return this.createBook({ ...candidate, status: opts.status, tags: opts.tags });
+      let full = candidate;
+      // 搜索页候选缺少简介/ISBN 等详情字段，抓取详情页补全
+      if (candidate.doubanUrl && candidate.intro == null && candidate.isbn == null) {
+        try {
+          full = await douban.fetchByUrl(candidate.doubanUrl);
+        } catch {
+          // 抓取详情页失败则回退到搜索页数据
+        }
+      }
+      return this.createBook({ ...full, status: opts.status, tags: opts.tags });
     },
   };
 }
