@@ -496,6 +496,11 @@ body {
   font-size: 15px;
 }
 
+.add-tabs {
+  width: fit-content;
+  margin: 0 auto 20px;
+}
+
 .form-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
