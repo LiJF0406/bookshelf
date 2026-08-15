@@ -25,6 +25,14 @@ const STATUS_COLORS: Record<BookStatus, string> = {
 export function BookDetail({ book, onClose, onUpdated, onDeleted }: Props) {
   const [newTag, setNewTag] = useState("");
   const [confirming, setConfirming] = useState(false);
+  const [closing, setClosing] = useState(false);
+
+  // 退出动画：先标记 closing 触发 CSS 退场动画，等待动画结束后再真正卸载
+  function requestClose() {
+    if (closing) return;
+    setClosing(true);
+    window.setTimeout(onClose, 180);
+  }
 
   async function changeStatus(status: string) {
     try {
@@ -77,9 +85,9 @@ export function BookDetail({ book, onClose, onUpdated, onDeleted }: Props) {
   }
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
+    <div className={`modal-overlay${closing ? " closing" : ""}`} onClick={requestClose}>
       <div className="modal" onClick={(e) => e.stopPropagation()}>
-        <button className="modal-close" onClick={onClose}>
+        <button className="modal-close" onClick={requestClose}>
           ×
         </button>
 
