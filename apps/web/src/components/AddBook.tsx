@@ -140,10 +140,10 @@ export function AddBook({ onDone }: Props) {
               ))}
             </select>
             <input
+              className="search-input"
               placeholder="标签（逗号分隔），如 科幻,中国"
               value={importTags}
               onChange={(e) => setImportTags(e.target.value)}
-              style={{ flex: 1 }}
             />
           </div>
 
