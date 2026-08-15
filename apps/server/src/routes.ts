@@ -98,6 +98,13 @@ export function registerRoutes(app: FastifyInstance, service: Service): void {
     return { count: await service.batchTags(ids, tags) };
   });
 
+  app.post("/api/books/batch-pin", async (req) => {
+    const { ids, pinned } = z
+      .object({ ids: z.array(z.number().int()), pinned: z.boolean() })
+      .parse(req.body);
+    return { count: await service.batchPin(ids, pinned) };
+  });
+
   app.delete("/api/books/:id", async (req, reply) => {
     const { id } = idSchema.parse(req.params);
     const ok = await service.deleteBook(id);

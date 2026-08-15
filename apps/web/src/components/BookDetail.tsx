@@ -45,6 +45,15 @@ export function BookDetail({ book, onClose, onUpdated, onDeleted }: Props) {
     }
   }
 
+  async function changePin() {
+    try {
+      const updated = await api.updatePin(book.id, !book.pinnedAt);
+      onUpdated(updated);
+    } catch (e) {
+      alert((e as Error).message);
+    }
+  }
+
   async function addTag() {
     const name = newTag.trim();
     if (!name) return;
@@ -154,6 +163,12 @@ export function BookDetail({ book, onClose, onUpdated, onDeleted }: Props) {
         )}
 
         <div className="detail-actions">
+          <div className="action-block">
+            <span className="action-label">置顶</span>
+            <button className="btn secondary" onClick={changePin}>
+              {book.pinnedAt ? "取消置顶" : "置顶"}
+            </button>
+          </div>
           <div className="action-block">
             <span className="action-label">阅读状态</span>
             <Dropdown

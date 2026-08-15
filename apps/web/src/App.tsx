@@ -40,6 +40,9 @@ export default function App() {
       )
     : books;
 
+  const selectedBooks = filtered.filter((b) => selectedIds.has(b.id));
+  const allPinned = selectedBooks.length > 0 && selectedBooks.every((b) => b.pinnedAt);
+
   function refreshTags() {
     api
       .listTags()
@@ -161,6 +164,20 @@ export default function App() {
     }
   }
 
+  async function handleBatchPin() {
+    try {
+      await api.batchPin([...selectedIds], !allPinned);
+      exitBatch();
+    } catch (e) {
+      alert((e as Error).message);
+    }
+  }
+
+  function handleLongPress(book: BookWithTags) {
+    setBatchMode(true);
+    setSelectedIds((prev) => new Set(prev).add(book.id));
+  }
+
   return (
     <div className="app-root">
       <header className="app-header">
@@ -201,6 +218,9 @@ export default function App() {
           onBatchStatus={handleBatchStatus}
           onBatchTags={handleBatchTags}
           onBatchDelete={handleBatchDelete}
+          onBatchPin={handleBatchPin}
+          onLongPress={handleLongPress}
+          allPinned={allPinned}
         />
       )}
 

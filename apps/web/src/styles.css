@@ -18,6 +18,7 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
   background: var(--bg);
   color: var(--text);
+  -webkit-tap-highlight-color: transparent;
 }
 
 .app-header {
@@ -47,6 +48,7 @@ body {
 
 .app-root {
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
 }
@@ -155,13 +157,36 @@ body {
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+@media (min-width: 480px) {
+  .grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (min-width: 640px) {
+  .grid {
+    grid-template-columns: repeat(5, 1fr);
+    gap: 16px;
+  }
+}
+
+@media (min-width: 900px) {
+  .grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 20px;
+  }
 }
 
 .book-card {
   cursor: pointer;
   transition: transform 0.12s ease;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
 }
 
 .book-card:hover {
@@ -185,6 +210,7 @@ body {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  -webkit-user-drag: none;
 }
 
 .book-cover .placeholder {
@@ -661,22 +687,83 @@ select:focus {
   background: #fbe9e7;
 }
 
-.batch-bar {
+.batch-nav {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 20;
+  background: var(--card);
+  border-top: 1px solid var(--border);
+  box-shadow: 0 -6px 20px rgba(0, 0, 0, 0.08);
+  padding: 10px 16px;
+  padding-bottom: calc(10px + env(safe-area-inset-bottom));
+}
+
+.batch-nav-top {
   display: flex;
   align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 12px 16px;
-  margin-bottom: 20px;
+  gap: 8px;
+  margin-bottom: 8px;
 }
 
 .batch-count {
   font-size: 14px;
   color: var(--muted);
   margin-right: auto;
+}
+
+.batch-nav-bar {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.batch-nav-bar .btn {
+  width: 100%;
+}
+
+.batch-nav-bar .btn.active {
+  background: var(--accent-light);
+  border-color: var(--accent-light);
+  color: #fff;
+}
+
+.batch-panel {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 10px;
+  margin-bottom: 8px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.batch-panel-row {
+  align-items: center;
+}
+
+.batch-panel-row .search-input {
+  flex: 1;
+}
+
+.batch-panel-item {
+  border: 1px solid var(--border);
+  background: var(--card);
+  padding: 8px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--text);
+}
+
+.batch-panel-item:hover {
+  border-color: var(--accent);
+}
+
+.container.has-batch-nav {
+  padding-bottom: calc(120px + env(safe-area-inset-bottom));
 }
 
 .dropdown-wrap {
@@ -783,4 +870,183 @@ select:focus {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
+}
+
+/* ===== 键盘焦点 ===== */
+.btn:focus-visible,
+.tab:focus-visible,
+.chip:focus-visible,
+.modal-close:focus-visible,
+.context-item:focus-visible,
+.dropdown-menu button:focus-visible,
+.tag .remove:focus-visible,
+.card-check:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ===== 响应式：手机端（<640px） ===== */
+@media (max-width: 639px) {
+  .container {
+    padding: 16px 12px;
+  }
+
+  .app-header {
+    padding: 12px 16px;
+  }
+
+  .app-header h1 {
+    font-size: 18px;
+  }
+
+  /* 触摸目标 */
+  .btn,
+  .tab,
+  .chip,
+  .context-item,
+  .dropdown-menu button {
+    min-height: 44px;
+  }
+
+  .modal-close {
+    width: 40px;
+    height: 40px;
+  }
+
+  .search-input,
+  .form-field input,
+  .form-field select,
+  .tag-input {
+    min-height: 40px;
+  }
+
+  /* 工具栏：tabs 横向滚动，搜索框独占一行 */
+  .toolbar {
+    gap: 8px;
+  }
+
+  .tabs {
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    flex-wrap: nowrap;
+    scrollbar-width: none;
+  }
+
+  .tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .tabs .tab {
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+
+  .search-input {
+    flex-basis: 100%;
+  }
+
+  /* 卡片文字随封面缩小 */
+  .book-card .title {
+    font-size: 13px;
+  }
+
+  .book-card .author {
+    font-size: 11px;
+  }
+
+  /* 详情卡：全屏沉浸式 */
+  .modal-overlay {
+    padding: 0;
+  }
+
+  .modal {
+    max-width: none;
+    width: 100%;
+    height: 100dvh;
+    max-height: none;
+    border-radius: 0;
+    padding: 20px 16px;
+    padding-bottom: calc(20px + env(safe-area-inset-bottom));
+  }
+
+  .detail-body {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .detail-cover {
+    width: 140px;
+    margin: 0 auto;
+  }
+
+  .detail-header {
+    flex-direction: column;
+    gap: 8px;
+    padding-right: 0;
+  }
+
+  .badges {
+    flex-wrap: wrap;
+  }
+
+  .meta-key {
+    min-width: 52px;
+  }
+
+  .detail-footer {
+    flex-wrap: wrap;
+  }
+
+  .confirm-text {
+    flex-basis: 100%;
+    margin-right: 0;
+  }
+
+  /* 录入表单：单列、纵向堆叠 */
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .field-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .field-row label {
+    min-width: 0;
+  }
+
+  /* 底部导航条：手机端按钮更紧凑 */
+  .batch-nav {
+    padding: 8px 10px;
+    padding-bottom: calc(8px + env(safe-area-inset-bottom));
+  }
+
+  .batch-nav-bar {
+    gap: 6px;
+  }
+
+  .container.has-batch-nav {
+    padding-bottom: calc(110px + env(safe-area-inset-bottom));
+  }
+
+  /* 浮层钳制，防贴边溢出 */
+  .context-menu,
+  .dropdown-menu {
+    max-width: calc(100vw - 16px);
+    max-height: 60vh;
+    overflow-y: auto;
+  }
+}
+
+/* ===== 减少动态效果 ===== */
+@media (prefers-reduced-motion: reduce) {
+  .book-card:hover {
+    transform: none;
+  }
+
+  .modal-close:hover {
+    transform: none;
+  }
 }

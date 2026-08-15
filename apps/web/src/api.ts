@@ -55,6 +55,11 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ ids, tags }),
     }),
+  batchPin: (ids: number[], pinned: boolean) =>
+    request<{ count: number }>("/api/books/batch-pin", {
+      method: "POST",
+      body: JSON.stringify({ ids, pinned }),
+    }),
   deleteBook: (id: number) => request<{ ok: boolean }>(`/api/books/${id}`, { method: "DELETE" }),
   setTags: (id: number, tags: string[]) =>
     request<BookWithTags>(`/api/books/${id}/tags`, {

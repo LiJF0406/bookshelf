@@ -291,6 +291,18 @@ export function createService({ db, coverDir }: ServiceDeps) {
       return ids.length;
     },
 
+    async batchPin(ids: number[], pinned: boolean): Promise<number> {
+      if (ids.length === 0) return 0;
+      const res = await db
+        .update(books)
+        .set({
+          pinnedAt: pinned ? new Date().toISOString() : null,
+          updatedAt: new Date().toISOString(),
+        })
+        .where(inArray(books.id, ids));
+      return res.changes;
+    },
+
     async searchDouban(input: { isbn?: string; q?: string; url?: string }): Promise<{
       candidates: DoubanCandidate[];
     }> {
