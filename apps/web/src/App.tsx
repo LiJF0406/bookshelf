@@ -64,8 +64,8 @@ export default function App() {
 
   async function handlePin(book: BookWithTags) {
     try {
-      const updated = await api.updatePin(book.id, !book.pinnedAt);
-      handleUpdated(updated);
+      await api.updatePin(book.id, !book.pinnedAt);
+      setReload((r) => r + 1);
     } catch (e) {
       alert((e as Error).message);
     }
