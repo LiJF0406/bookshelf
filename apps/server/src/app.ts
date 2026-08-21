@@ -47,8 +47,34 @@ export async function buildApp(options: BuildAppOptions = {}) {
   registerRoutes(app, service);
 
   // 多会话模式：每个 MCP 会话独立 transport（复用 createMcpServer 工厂），
-  // 按 mcp-session-id 维护，DELETE 关闭会话时从 Map 移除
-  const transports = new Map<string, StreamableHTTPServerTransport>();
+  // 按 mcp-session-id 维护，DELETE 关闭会话时从 Map 移除。
+  // 会话记录最后活动时间，空闲超时由定时器回收，避免客户端不发 DELETE 泄漏
+  type McpSession = { transport: StreamableHTTPServerTransport; lastActive: number };
+  const transports = new Map<string, McpSession>();
+  const sessionTtlMs = Number(process.env.BOOKSHELF_MCP_SESSION_TTL_MS ?? 30 * 60 * 1000);
+  const maxSessions = Number(process.env.BOOKSHELF_MCP_MAX_SESSIONS ?? 100);
+
+  // 定期清理空闲会话（unref：不阻止进程退出）；间隔取 min(60s, TTL)，
+  // 便于 TTL 调小时及时回收
+  const sweepIntervalMs = Math.min(60_000, sessionTtlMs);
+  const sweepTimer = setInterval(() => {
+    const now = Date.now();
+    for (const [id, { transport, lastActive }] of transports) {
+      if (now - lastActive <= sessionTtlMs) continue;
+      transports.delete(id);
+      transport.close().catch(() => {});
+      app.log.info({ sessionId: id }, "MCP 会话空闲超时，已关闭");
+    }
+  }, sweepIntervalMs);
+  sweepTimer.unref();
+
+  // 优雅关闭：app.close() 时停止清理定时器并关闭所有存活会话
+  app.addHook("onClose", async () => {
+    clearInterval(sweepTimer);
+    const sessions = [...transports.values()];
+    transports.clear();
+    await Promise.allSettled(sessions.map((s) => s.transport.close()));
+  });
 
   // 独立 scope 注册 /mcp：允许空 JSON body——
   // SDK 关闭会话的 DELETE 请求不带 body，Fastify 默认 parser 会对
@@ -77,9 +103,9 @@ export async function buildApp(options: BuildAppOptions = {}) {
 
           if (request.method === "DELETE") {
             // SDK 的 handleDeleteRequest 内部会 close()，这里只需找到对应
-            // transport 并转交，完成后移除引用
-            const transport = sessionId ? transports.get(sessionId) : undefined;
-            if (!sessionId || !transport) {
+            // transport 并转交，完成后移除引用（finally 保证即使出错也清理）
+            const entry = sessionId ? transports.get(sessionId) : undefined;
+            if (!sessionId || !entry) {
               reply.raw.writeHead(404, { "Content-Type": "application/json" });
               reply.raw.end(
                 JSON.stringify({
@@ -90,16 +116,20 @@ export async function buildApp(options: BuildAppOptions = {}) {
               );
               return;
             }
-            await transport.handleRequest(request.raw, reply.raw, undefined);
-            transports.delete(sessionId);
+            try {
+              await entry.transport.handleRequest(request.raw, reply.raw, undefined);
+            } finally {
+              transports.delete(sessionId);
+              app.log.info({ sessionId }, "MCP 会话已关闭");
+            }
             return;
           }
 
           let transport: StreamableHTTPServerTransport | undefined;
           if (sessionId) {
-            // 已建立会话：按 session-id 复用对应 transport
-            transport = transports.get(sessionId);
-            if (!transport) {
+            // 已建立会话：按 session-id 复用对应 transport，并刷新活动时间
+            const entry = transports.get(sessionId);
+            if (!entry) {
               reply.raw.writeHead(404, { "Content-Type": "application/json" });
               reply.raw.end(
                 JSON.stringify({
@@ -110,13 +140,27 @@ export async function buildApp(options: BuildAppOptions = {}) {
               );
               return;
             }
+            entry.lastActive = Date.now();
+            transport = entry.transport;
           } else if (request.method === "POST" && isInitializeRequest(request.body)) {
             // 新会话初始化：创建独立 transport，SDK 生成 sessionId 后登记进 Map
+            if (transports.size >= maxSessions) {
+              reply.raw.writeHead(503, { "Content-Type": "application/json" });
+              reply.raw.end(
+                JSON.stringify({
+                  jsonrpc: "2.0",
+                  error: { code: -32000, message: "Too many sessions, please retry later" },
+                  id: null,
+                }),
+              );
+              return;
+            }
             const mcpServer = createMcpServer(service);
             transport = new StreamableHTTPServerTransport({
               sessionIdGenerator: () => randomUUID(),
               onsessioninitialized: (id) => {
-                transports.set(id, transport!);
+                transports.set(id, { transport: transport!, lastActive: Date.now() });
+                app.log.info({ sessionId: id }, "MCP 会话已创建");
               },
             });
             await mcpServer.connect(transport);
